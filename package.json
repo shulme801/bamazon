@@ -1,0 +1,25 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "Basic storefront command line app",
+  "main": "bamazon.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shulme801/bamazon.git"
+  },
+  "author": "Steve Hulme",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shulme801/bamazon/issues"
+  },
+  "homepage": "https://github.com/shulme801/bamazon#readme",
+  "dependencies": {
+    "chalk": "^2.3.0",
+    "inquirer": "^4.0.1",
+    "markdown-table": "^1.1.1",
+    "mysql": "^2.15.0"
+  }
+}
