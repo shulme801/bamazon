@@ -11,30 +11,28 @@ First, look at the bamazon.sql file. In it is the SQL to do the following
     stock_quantity (how much of the product is available in stores)
 4.  Populate this database with around 10 different products. I made this a "nautical-themed" store -- products for the active boat captain.
 
-Second, in this file ()
-
-Then create a Node application called bamazonCustomer.js. Running this application will first display all of the items available for sale. Include the ids, names, and prices of products for sale.
-
-The app should then prompt users with two messages.
-
-The first should ask them the ID of the product they would like to buy.
-The second message should ask how many units of the product they would like to buy.
-Once the customer has placed the order, your application should check if your store has enough of the product to meet the customer's request.
-If not, the app should log a phrase like Insufficient quantity!, and then prevent the order from going through.
-However, if your store does have enough of the product, you should fulfill the customer's order.
-This means updating the SQL database to reflect the remaining quantity.
-Once the update goes through, show the customer the total cost of their purchase.
-
+Second, in this file (bamazonCustomer.js) is an application that will 
+1. Display all of the items available for sale. Included are the ids, names, and prices of products for sale.
+2. Prompt users with two messages.
+   Ask them the ID of the product they would like to buy.
+   Ask how many units of the product they would like to buy.
+3. The code then places the customer's order.
+4. Once the order has been placed, check whether store (i.e. products table in bamazon_DB) has enough of the product to meet the customer's request.
+5. If there is not enough stock, console.log "Insufficient quantity!" and do not process the order.
+6. Else (there is enough quantity), update the products table.stock_quantity by the number of units in the order and
+     console.log the total cost of customer's purchase (number of unitsxprice per unit).
 
 */
 
-var mysql        = require("mysql");
-var inquirer     = require("inquirer");
+var mysql         = require("mysql");
+var inquirer      = require("inquirer");
+var colors        = require("colors"); //the colors npm lets us colorize console output
 var markdownTable = require("markdown-table"); //markdown-table is a package that we'll use to neatly print the product table to console
-var outTable     = []; //use this global to hold our products table when we want to echo it to console
+var outTable      = []; //use this global to hold our products table when we want to echo it to console
+var myConnection;
 
 // create the connection information for the sql database
-var connection = mysql.createConnection({
+var connection    = mysql.createConnection({
   host: "localhost",
   port: 3306,
 
@@ -51,8 +49,14 @@ connection.connect(function(err) {
   if (err) throw err;
   
   // run the start function after the connection is made to prompt the user
+
   start();
 });
+
+function showProducts() {
+  var printTable = markdownTable(outTable);
+  console.log("\n"+printTable.toString()+"\n");
+};
 
 function tableize(results) {
   //Push the table header row onto outTable array 
@@ -64,20 +68,97 @@ function tableize(results) {
     outTable.push(oneRow);
   }
   
-  var printTable = markdownTable(outTable);
-  console.log("\n"+printTable.toString()+"\n");
-}
-
-
-// function which prompts the user for what action they should take
-function start() {
-  // First, echo the available products to the console
-  connection.query("SELECT * FROM products",function(err,res) {
-    if (err) throw err;
+  showProducts();
   
-    tableize(res); // Output the products table in a nice format to the console
-    
-  connection.end();
-  });
 }
 
+
+
+
+// this is the function that drives the "customer experience"
+function start() {    
+    isReadyToShop();
+    connection.destroy;
+    return;
+}
+
+function isReadyToShop() {
+  
+  inquirer.prompt ([
+  {
+    name: 'shopIt',
+    type: 'confirm',
+    message: 'Are you ready to shop?'
+  }
+  ]).then (function(answer){
+   
+    if (answer.shopIt) {
+      connection.query("SELECT * FROM products",function(err,tableContents) {
+      if (err) throw err;
+      outTable=[];
+      tableize(tableContents); // Output the current products table in a nice format to the console
+      goShopping();
+    });
+      
+
+    } else {
+      console.log("BYE!");
+      return;
+    }
+  });
+
+}
+
+function goShopping() {
+  inquirer.prompt([
+  {
+        name: "ProductID",
+        type: "input",
+        message: "What is the ID of the product you would like to buy?",
+        //Validate: checks weather or not the user typed a response
+        validate: function(value) {
+            if (isNaN(value) == false) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+  }, 
+  {
+        name: "Quantity",
+        type: "input",
+        message: "How many would you like to buy?",
+        validate: function(value) {
+            if (isNaN(value) == false) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    ]).then(function(answer) {
+        var query = 'SELECT * FROM Products WHERE id=' + answer.ProductID;
+        connection.query(query, function(err, res) {
+          if (err) throw err;
+          //no error -- let's see if we can fill the order
+          if (answer.Quantity <= res[0].stock_quantity) {
+            //we can fill the order
+            console.log("Your order for "+answer.Quantity+" units of "+res[0].product_name+" will be filled");
+            var newQTY = res[0].stock_quantity - answer.Quantity;
+            var unitPrice = res[0].price; //save off cost per unit
+            query = "UPDATE products SET stock_quantity=" + newQTY + " WHERE id="+answer.ProductID;
+            connection.query(query, function(err, res) {
+              if (err) throw err;
+              purchaseTotal = answer.Quantity*unitPrice;
+              console.log("Your total cost is $"+purchaseTotal);
+              isReadyToShop();
+            });
+          } else {
+            console.log("\nSorry -- not enough stock to fill your order!\n");
+            isReadyToShop();
+          }
+          
+
+        })
+    });
+}

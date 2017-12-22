@@ -18,6 +18,7 @@
   "homepage": "https://github.com/shulme801/bamazon#readme",
   "dependencies": {
     "chalk": "^2.3.0",
+    "colors": "^1.1.2",
     "inquirer": "^4.0.1",
     "markdown-table": "^1.1.1",
     "mysql": "^2.15.0"
