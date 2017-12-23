@@ -55,6 +55,8 @@ connection.connect(function(err) {
 
 function showProducts() {
   var printTable = markdownTable(outTable);
+  console.log("------".cyan);
+  console.log("\n-------- Products Available ---------------".magenta);
   console.log("\n"+printTable.toString()+"\n");
 };
 
@@ -63,16 +65,13 @@ function tableize(results) {
   outTable.push(['Item ID','Product Name','Department','Price','In Stock QTY']);
   for (var i = 0; i< results.length; i++) {
     //Turn each row of results into an array of strings
-    var oneRow=[results[i].id,results[i].product_name,results[i].department_name,results[i].price,results[i].stock_quantity];
+    var displayPrice = '$'+results[i].price;
+    var oneRow=[results[i].id,results[i].product_name,results[i].department_name,displayPrice,results[i].stock_quantity];
     //And push each row of results onto our output table
     outTable.push(oneRow);
   }
-  
   showProducts();
-  
 }
-
-
 
 
 // this is the function that drives the "customer experience"
@@ -109,19 +108,20 @@ function isReadyToShop() {
 
 }
 
+function validateInputNum(inputNum){
+  var reg = /^\d+$/;
+  return reg.test(inputNum) || "input should be a number!";
+}
+
 function goShopping() {
   inquirer.prompt([
   {
         name: "ProductID",
         type: "input",
         message: "What is the ID of the product you would like to buy?",
-        //Validate: checks weather or not the user typed a response
+        //Validate: checks whether the user typed a response
         validate: function(value) {
-            if (isNaN(value) == false) {
-                return true;
-            } else {
-                return false;
-            }
+          return validateInputNum(value);
         }
   }, 
   {
@@ -129,13 +129,9 @@ function goShopping() {
         type: "input",
         message: "How many would you like to buy?",
         validate: function(value) {
-            if (isNaN(value) == false) {
-                return true;
-            } else {
-                return false;
-            }
+            return validateInputNum(value);
         }
-    }
+  }
     ]).then(function(answer) {
         var query = 'SELECT * FROM Products WHERE id=' + answer.ProductID;
         connection.query(query, function(err, res) {
