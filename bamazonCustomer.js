@@ -29,9 +29,14 @@ var inquirer      = require("inquirer");
 var colors        = require("colors"); //the colors npm lets us colorize console output
 var markdownTable = require("markdown-table"); //markdown-table is a package that we'll use to neatly print the product table to console
 var outTable      = []; //use this global to hold our products table when we want to echo it to console
-var myConnection;
+var maxProducts   = 0;
 
-// create the connection information for the sql database
+/*************************************************************/
+/* the following logic creates the connection to the mySQL
+   database, and invokes the "start" function which, in turn,
+   will start up the store product display and shopping logic*/
+
+// First, create the connection information for the sql database
 var connection    = mysql.createConnection({
   host: "localhost",
   port: 3306,
@@ -48,30 +53,43 @@ var connection    = mysql.createConnection({
 connection.connect(function(err) {
   if (err) throw err;
   
-  // run the start function after the connection is made to prompt the user
-
+  // run the start function after the connection is made to let user enter the store
   start();
 });
+
+/*************************************************************/
+/* The next functions (tableize, showProducts) are invoked to
+    display the contents of the database's Products table
+*/
+
+function tableize(results) {
+  //Push the table header row onto outTable array 
+  outTable.push(['Item ID','Product Name','Department','Price','In Stock QTY']);
+  maxProducts = 0;
+  for (var i = 0; i< results.length; i++) {
+    //Turn each row of results into an array of strings
+    
+    var displayPrice = '$'+results[i].price;
+    var oneRow=[results[i].id,results[i].product_name,results[i].department_name,displayPrice,results[i].stock_quantity];
+    //And push each row of results onto our output table
+    outTable.push(oneRow);
+    maxProducts++;
+  }
+  showProducts();
+}
 
 function showProducts() {
   var printTable = markdownTable(outTable);
   console.log("------".cyan);
   console.log("\n-------- Products Available ---------------".magenta);
   console.log("\n"+printTable.toString()+"\n");
+
 };
 
-function tableize(results) {
-  //Push the table header row onto outTable array 
-  outTable.push(['Item ID','Product Name','Department','Price','In Stock QTY']);
-  for (var i = 0; i< results.length; i++) {
-    //Turn each row of results into an array of strings
-    var displayPrice = '$'+results[i].price;
-    var oneRow=[results[i].id,results[i].product_name,results[i].department_name,displayPrice,results[i].stock_quantity];
-    //And push each row of results onto our output table
-    outTable.push(oneRow);
-  }
-  showProducts();
-}
+/*******************************************************************************/
+/* Now, we come to the functions that do the work of starting the store display,
+   and letting the user shop.*/
+/********************************************************************************/
 
 
 // this is the function that drives the "customer experience"
@@ -80,6 +98,14 @@ function start() {
     connection.destroy;
     return;
 }
+
+/***************************************************************************/
+/* Here are the shopping functions. "isReadyToShop" finds out whether the
+   user wants to shop, or wants to quit shopping. If user wants to shop, 
+   goShopping is called to let user enter an order. At the end of goShopping
+   we make a recursive call to isReady to shop to continue the shopping 
+   experience, or quit shopping.*/
+/**************************************************************************/
 
 function isReadyToShop() {
   
@@ -108,10 +134,35 @@ function isReadyToShop() {
 
 }
 
+/***************************************************************************/
+/* The following pair of validation functions are used by the inquirer
+    prompts in goShopping to validate that user has input a valid productID
+    (numeric and within the range of valid productIDs) and a numeric 
+    quantity to purchase.*/
+/**************************************************************************/
 function validateInputNum(inputNum){
   var reg = /^\d+$/;
   return reg.test(inputNum) || "input should be a number!";
 }
+
+function validateProductID(productID){
+
+  // Note that we set maxProducts when we read in the products table from the database
+  var result = productID <= maxProducts ? true : "invalid Product ID -- try again";
+  return result;
+}
+
+/*************************************************************************************/
+/* The goShopping function, that gets the ProductID user wants to by, as 
+   well as the quantity user wishes to purchase. The productID and Quantity 
+   get validated by the validate functions. If the Quantity desired is 
+   greater than the quantity of product on hand, we give user an error message and 
+   we don't fill order. If the Quantity desired is <= quantity of product on hand   
+   we fill the order by deducting Quantity desired from quantity on hand, and tell
+   user the total price.  
+   At the end of goShopping we make a recursive call to isReadyToShop so that user
+   can either continue the shopping or quit the app.*/
+/*************************************************************************************/
 
 function goShopping() {
   inquirer.prompt([
@@ -121,7 +172,9 @@ function goShopping() {
         message: "What is the ID of the product you would like to buy?",
         //Validate: checks whether the user typed a response
         validate: function(value) {
-          return validateInputNum(value);
+        // Make sure the typed value is a number and that it's within the range of valid product IDs.
+
+          return ((validateInputNum(value))&&(validateProductID(value)));
         }
   }, 
   {
