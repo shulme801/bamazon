@@ -106,10 +106,9 @@ function tableize(results) {
   outTable.push(['Item ID','Product Name','Department','Price','In Stock QTY']);
   maxProducts = 0;
   for (var i = 0; i< results.length; i++) {
-    //Turn each row of results into an array of strings
-    console.log("From results, unit price is "+results[i].price);
-    //add a $ to the price from the database and make sure the "cents" have trailing zeroes
-    displayPrice = formatPrice(results[i].price);
+    //Turns each row of results into an array of strings
+    
+    displayPrice = formatPrice(results[i].price); // fix the "cents" part of the price, and prepend a "$"
    
     var oneRow=[results[i].id,results[i].product_name,results[i].department_name,displayPrice,results[i].stock_quantity];
     //And push each row of results onto our output table
