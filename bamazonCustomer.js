@@ -57,10 +57,49 @@ connection.connect(function(err) {
   start();
 });
 
-/*************************************************************/
+
+/******************************************************************************/
+/*
+    formatPrice is a helper function  that makes sure that the cents
+    we display are correct (e.g., 11.00 in the database comes into
+    the results object as 11; similarly, 11.50 in the database comes into
+    the results object as 11.5). formatPrice corrects these values by adding
+    either one or two zeroes to the "cents" part of the price. Finally, it 
+    prepends a "$" to the price.                                              */
+/******************************************************************************/
+
+function formatPrice(inputPrice) {
+  var formattedPrice = inputPrice;
+  var priceAry = inputPrice.toString().split('.');
+  
+  /*If the "." is omitted or does not occur in inputPrice
+    the array returned contains one element consisting of the entire string.*/
+  if (priceAry.length === 1) {
+    //the input price was an even dollar amount
+    formattedPrice += ".00";
+  } else {
+    var len = priceAry[1].length;
+    switch (len) {
+      case 1: //only one cents digit, so add a zero to the end
+        formattedPrice += "0";
+        break;
+      case 2: //we have 2 cents digits, so we don't need to do anything
+        break;
+      default: //we have more than two cents digits, so we need to lop off the extras (we aren't going to round them up)
+        var cents = priceAry[1].toString().substring(0,2); //0 is pos of 1st char to include, 2 is pos of 1st char not to include
+        formattedPrice = priceAry[0].toString()+"."+cents;
+    }
+  }
+    
+  formattedPrice = "$"+formattedPrice;
+  return formattedPrice;
+  
+}
+
+/******************************************************************************/
 /* The next functions (tableize, showProducts) are invoked to
-    display the contents of the database's Products table
-*/
+    display the contents of the database's Products table. */
+/******************************************************************************/
 
 function tableize(results) {
   //Push the table header row onto outTable array 
@@ -68,8 +107,10 @@ function tableize(results) {
   maxProducts = 0;
   for (var i = 0; i< results.length; i++) {
     //Turn each row of results into an array of strings
-    
-    var displayPrice = '$'+results[i].price;
+    console.log("From results, unit price is "+results[i].price);
+    //add a $ to the price from the database and make sure the "cents" have trailing zeroes
+    displayPrice = formatPrice(results[i].price);
+   
     var oneRow=[results[i].id,results[i].product_name,results[i].department_name,displayPrice,results[i].stock_quantity];
     //And push each row of results onto our output table
     outTable.push(oneRow);
@@ -198,8 +239,8 @@ function goShopping() {
             query = "UPDATE products SET stock_quantity=" + newQTY + " WHERE id="+answer.ProductID;
             connection.query(query, function(err, res) {
               if (err) throw err;
-              purchaseTotal = answer.Quantity*unitPrice;
-              console.log("Your total cost is $"+purchaseTotal);
+              purchaseTotal = formatPrice(answer.Quantity*unitPrice);
+              console.log("Your total cost is "+purchaseTotal);
               isReadyToShop();
             });
           } else {
