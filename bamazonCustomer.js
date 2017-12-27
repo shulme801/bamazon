@@ -121,7 +121,7 @@ function tableize(results) {
 function showProducts() {
   var printTable = markdownTable(outTable);
   console.log("------".cyan);
-  console.log("\n-------- Products Available ---------------".magenta);
+  console.log("\n-------- The Eclectic BAMAZON Store ---------------".magenta);
   console.log("\n"+printTable.toString()+"\n");
 
 };
@@ -153,7 +153,7 @@ function isReadyToShop() {
   {
     name: 'shopIt',
     type: 'confirm',
-    message: 'Are you ready to shop?'
+    message: 'order a product from the eclectic bamazon store?'
   }
   ]).then (function(answer){
    
@@ -167,8 +167,12 @@ function isReadyToShop() {
       
 
     } else {
-      console.log("BYE!");
-      return;
+      connection.end(function(err) {
+        if (err) throw err;
+        console.log("BYE!");
+        return;
+      });
+      
     }
   });
 
@@ -182,13 +186,33 @@ function isReadyToShop() {
 /**************************************************************************/
 function validateInputNum(inputNum){
   var reg = /^\d+$/;
-  return reg.test(inputNum) || "input should be a number!";
+  var result;
+
+  if (reg.test(inputNum)) {
+    if (inputNum > 0) {
+      result = true
+    } else {
+      result = false
+    }
+  } else {
+    result = false;
+  }
+  
+  return result;
 }
 
 function validateProductID(productID){
+  var result;
 
-  // Note that we set maxProducts when we read in the products table from the database
-  var result = productID <= maxProducts ? true : "invalid Product ID -- try again";
+  result = validateInputNum(productID);
+  if (result) {
+   // Note that we set maxProducts when we read in the products table from the database
+   // productID has to be greater than 0 or less than or equal to maxProducts
+   result = productID <= 0 ? "Invalid Product ID -- try again": productID > maxProducts ? "invalid Product ID -- try again" : true;
+  } else {
+    result = "Invalid Product ID -- try again";
+  }
+  
   return result;
 }
 
@@ -213,8 +237,7 @@ function goShopping() {
         //Validate: checks whether the user typed a response
         validate: function(value) {
         // Make sure the typed value is a number and that it's within the range of valid product IDs.
-
-          return ((validateInputNum(value))&&(validateProductID(value)));
+          return (validateProductID(value));
         }
   }, 
   {
