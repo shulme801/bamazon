@@ -38,5 +38,5 @@
 				* The app calculates the total price of the order and displays it in the console.
 			* In either case, the app makes a recursive call to the shopping logic, which takes the user back to the (re) display of the Products. Note that the updated quantity for the product just purchased will be displayed when this happens.
 ### Video
-* A video demonstration of this project can be found at [Bamazon2 - YouTube](https://www.youtube.com/watch?v=QZKVviTRJXA&feature=youtu.be).
+* An in-depth video demonstration of this project can be found at [Bamazon2 - YouTube](https://www.youtube.com/watch?v=QZKVviTRJXA&feature=youtu.be).
 
