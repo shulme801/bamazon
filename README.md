@@ -35,7 +35,6 @@
 	* The Quantity Desired of the product is validated as follows:
 		* must be an integer. No character input is allowed for the Quantity Desired.
 * Once a Product ID and Quantity Desired have passed initial validation (using inquirer’s “validate” facility, the app retrieves the row whose id column value matches the Product ID.
-
 		* The app checks the value in the stock_quantity field against the user’s input Quantity Desired. 
 			* If the Quantity Desired is greater than stock_quantity, the user is informed that the order cannot 
 			  be fulfilled. No update is done to the Products table.
