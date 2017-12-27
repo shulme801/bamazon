@@ -1,4 +1,4 @@
-# bamazon MySQL UNC Bootcamp Raleigh September 2017 cohort
+# Homework 10 - UNC Bootcamp Raleigh September 2017 cohort Steve Hulme
 ## Overview To Challenge 1 Solution (bamazonCustomer.js)
 ### Database
 * Created a MySQL database called “bamazon” and a table inside that database called “products”. 
